@@ -74,13 +74,48 @@ Skinning::Skinning(int numMeshVertices, const double * restMeshVertexPositions,
 void Skinning::applySkinning(const RigidTransform4d * jointSkinTransforms, double * newMeshVertexPositions) const
 {
   // Students should implement this
-
   // The following below is just a dummy implementation.
+  //meshSkinningJoints
+    for (int i = 0; i < 22; i++)
+    {
+        //jointSkinTransforms[i].print();
+        for (int j = 0; j < 4; j++)
+        {
+            for (int k = 0; k < 4; k++)
+            {
+                if (j != k)
+                {
+                    if (fabs(jointSkinTransforms[i][j][k]) > 0.001)
+                        printf("error\n");
+                }
+            }
+
+        }
+    }
   for(int i=0; i<numMeshVertices; i++)
   {
-    newMeshVertexPositions[3 * i + 0] = restMeshVertexPositions[3 * i + 0];
-    newMeshVertexPositions[3 * i + 1] = restMeshVertexPositions[3 * i + 1];
-    newMeshVertexPositions[3 * i + 2] = restMeshVertexPositions[3 * i + 2];
+      double x = restMeshVertexPositions[3 * i + 0];
+      double y = restMeshVertexPositions[3 * i + 1];
+      double z = restMeshVertexPositions[3 * i + 2];
+      Vec4d rest_vertex_pos = Vec4d(x, y, z, 0);
+      Vec4d result_pos = Vec4d(0, 0, 0, 0);
+      double sum = 0;
+      for (int j = 0; j < numJointsInfluencingEachVertex; j++)
+      {
+          double weight = meshSkinningWeights[numJointsInfluencingEachVertex * i+j];
+          sum += weight;
+          RigidTransform4d skin_matrix = jointSkinTransforms[meshSkinningJoints[numJointsInfluencingEachVertex * i+j]];
+          result_pos += weight * skin_matrix * rest_vertex_pos;
+      }
+      if (fabs(sum - 1) > 0.001)
+          printf("error\n");
+      if (fabs(result_pos[0] - x) > 0.001)
+          printf("error\n");
+      newMeshVertexPositions[3 * i + 0] = result_pos[0];
+      newMeshVertexPositions[3 * i + 1] = result_pos[1];
+      newMeshVertexPositions[3 * i + 2] = result_pos[2];
   }
+
+
 }
 

@@ -212,15 +212,6 @@ void FK::computeLocalAndGlobalTransforms(
   // Use the jointParents and jointUpdateOrder arrays to do so.
   // Also useful are the Mat3d and RigidTransform4d classes defined in the Vega folder.
 
-  // The following is just a dummy implementation that should be replaced.
-  double identity[16] = {
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1 };
-  //printf("eulerAngles size: %d\n", eulerAngles.size());
-  //printf("translations size: %d\n", translations.size());
-
   for (int i = 0; i < jointUpdateOrder.size(); i++)
   {
       int index = jointUpdateOrder[i];
@@ -254,16 +245,9 @@ void FK::computeSkinningTransforms(
     vector<RigidTransform4d> & skinTransforms)
 {
   // Students should implement this.
-
-  // The following is just a dummy implementation that should be replaced.
-  double identity[16] = {
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1 };
   for(int i=0; i<skinTransforms.size(); i++)
   {
-    skinTransforms[i] = RigidTransform4d(identity);
+    skinTransforms[i] = globalTransforms[i] * invRestGlobalTransforms[i];
   }
 }
 

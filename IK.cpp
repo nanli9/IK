@@ -108,5 +108,6 @@ void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles)
   // Use it implement the Tikhonov IK method (or the pseudoinverse method for extra credit).
   // Note that at entry, "jointEulerAngles" contains the input Euler angles. 
   // Upon exit, jointEulerAngles should contain the new Euler angles.
+
 }
 
