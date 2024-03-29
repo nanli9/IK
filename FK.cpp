@@ -218,11 +218,32 @@ void FK::computeLocalAndGlobalTransforms(
     0, 1, 0, 0,
     0, 0, 1, 0,
     0, 0, 0, 1 };
-  for(int i=0; i<localTransforms.size(); i++)
+  //printf("eulerAngles size: %d\n", eulerAngles.size());
+  //printf("translations size: %d\n", translations.size());
+
+  for (int i = 0; i < jointUpdateOrder.size(); i++)
   {
-    localTransforms[i] = RigidTransform4d(identity);
-    globalTransforms[i] = RigidTransform4d(identity);
+      int index = jointUpdateOrder[i];
+      RotateOrder rO = rotateOrders[index];
+      double R[9],R_JO[9];
+      Vec3d local_angles = eulerAngles[index];
+      Vec3d local_joint_orientation_angles = jointOrientationEulerAngles[index];
+      euler2Rotation(local_angles.data(), R, rO);
+      euler2Rotation(local_joint_orientation_angles.data(), R_JO, rO);
+      //compute the local matrix for each joint
+      RigidTransform4d local_matrix = RigidTransform4d(Mat3d(R_JO) * Mat3d(R), translations[index]);
+      localTransforms[index] = local_matrix;
+      RigidTransform4d global_matrix = local_matrix;
+      int tmp = jointParents[index];
+      while (tmp!=-1)
+      {
+          global_matrix = localTransforms[tmp] * global_matrix;
+
+          tmp = jointParents[tmp];
+      }
+      globalTransforms[index] = global_matrix;
   }
+
 }
 
 // Compute skinning transformations for all the joints, using the formula:
