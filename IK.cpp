@@ -67,6 +67,22 @@ void forwardKinematicsFunction(
   // It would be in principle possible to unify this "forwardKinematicsFunction" and FK::computeLocalAndGlobalTransforms(),
   // so that code is only written once. We considered this; but it is actually not easily doable.
   // If you find a good approach, feel free to document it in the README file, for extra credit.
+    for (int i = 0; i < numIKJoints; i++)
+    {
+        int index = IKJointIDs[i];
+        int updateOrder = fk.getJointUpdateOrder(index);
+        Vec3<double> translation = Vec3<double>(fk.getJointRestTranslation(index).data());
+        RotateOrder rO = fk.getJointRotateOrder(index);
+        Vec3<double> local_angles = Vec3<double>(eulerAngles[index]);
+        Vec3<double> local_joint_orientation_angles = Vec3<double>(fk.getJointOrient(index).data());
+        Mat3<double> R = Euler2Rotation(local_angles.data(), rO);
+        Mat3<double> R_JO = Euler2Rotation(local_joint_orientation_angles.data(), rO);
+
+        //handlePositions[i] = 0.0;
+
+    }
+
+
 }
 
 } // end anonymous namespaces
@@ -80,7 +96,6 @@ IK::IK(int numIKJoints, const int * IKJointIDs, FK * inputFK, int adolc_tagID)
 
   FKInputDim = fk->getNumJoints() * 3;
   FKOutputDim = numIKJoints * 3;
-
   train_adolc();
 }
 
@@ -93,6 +108,29 @@ void IK::train_adolc()
   //   This will later make it possible for you to compute the gradient of this function in IK::doIK
   //   (in other words, compute the "Jacobian matrix" J).
   // See ADOLCExample.cpp .
+    int numJoints = fk->getNumJoints();
+    std::vector<double> eulerAngles;
+    for (int i = 0; i < numJoints; i++)
+    {
+        eulerAngles.push_back(fk->getJointEulerAngles()[i].data()[0]);
+        eulerAngles.push_back(fk->getJointEulerAngles()[i].data()[1]);
+        eulerAngles.push_back(fk->getJointEulerAngles()[i].data()[2]);
+    }
+    trace_on(adolc_tagID);
+    vector<adouble> x(FKInputDim);
+    for (int i = 0; i < FKInputDim; i++)
+        x[i] <<= 0;
+
+    std::vector<adouble> y(FKOutputDim);
+
+    forwardKinematicsFunction(numIKJoints, IKJointIDs,*fk, x, y);
+
+
+    vector<double> output(FKOutputDim);
+    for (int i = 0; i < FKOutputDim; i++)
+        y[i] >>= output[i];
+
+    trace_off();
 }
 
 void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles)
