@@ -76,22 +76,22 @@ void Skinning::applySkinning(const RigidTransform4d * jointSkinTransforms, doubl
   // Students should implement this
   // The following below is just a dummy implementation.
   //meshSkinningJoints
-    for (int i = 0; i < 22; i++)
-    {
-        //jointSkinTransforms[i].print();
-        for (int j = 0; j < 4; j++)
-        {
-            for (int k = 0; k < 4; k++)
-            {
-                if (j != k)
-                {
-                    if (fabs(jointSkinTransforms[i][j][k]) > 0.001)
-                        printf("error\n");
-                }
-            }
+    //for (int i = 0; i < 22; i++)
+    //{
+    //    //jointSkinTransforms[i].print();
+    //    for (int j = 0; j < 4; j++)
+    //    {
+    //        for (int k = 0; k < 4; k++)
+    //        {
+    //            if (j != k)
+    //            {
+    //                if (fabs(jointSkinTransforms[i][j][k]) > 0.001)
+    //                    printf("error\n");
+    //            }
+    //        }
 
-        }
-    }
+    //    }
+    //}
   for(int i=0; i<numMeshVertices; i++)
   {
       double x = restMeshVertexPositions[3 * i + 0];
@@ -109,8 +109,8 @@ void Skinning::applySkinning(const RigidTransform4d * jointSkinTransforms, doubl
       }
       if (fabs(sum - 1) > 0.001)
           printf("error\n");
-      if (fabs(result_pos[0] - x) > 0.001)
-          printf("error\n");
+      /*if (fabs(result_pos[0] - x) > 0.001)
+          printf("error\n");*/
       newMeshVertexPositions[3 * i + 0] = result_pos[0];
       newMeshVertexPositions[3 * i + 1] = result_pos[1];
       newMeshVertexPositions[3 * i + 2] = result_pos[2];

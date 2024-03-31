@@ -67,22 +67,41 @@ void forwardKinematicsFunction(
   // It would be in principle possible to unify this "forwardKinematicsFunction" and FK::computeLocalAndGlobalTransforms(),
   // so that code is only written once. We considered this; but it is actually not easily doable.
   // If you find a good approach, feel free to document it in the README file, for extra credit.
+    vector<Mat3<adouble>> R_global_list;
+    vector<Vec3<adouble>> T_global_list;
+    R_global_list.resize(fk.getNumJoints());
+    T_global_list.resize(fk.getNumJoints());
+    for (int i = 0; i < fk.getNumJoints(); i++)
+    {
+        int index = fk.getJointUpdateOrder(i);
+        Vec3<adouble> T_local = Vec3<adouble>(fk.getJointRestTranslation(index).data());
+        RotateOrder rO = fk.getJointRotateOrder(index);
+        Vec3<adouble> local_angles = Vec3<adouble>(eulerAngles[3*index], eulerAngles[3 * index+1], eulerAngles[3 * index+2]);
+        Vec3<adouble> local_joint_orientation_angles = Vec3<adouble>(fk.getJointOrient(index).data());
+        Mat3<adouble> R_local = Euler2Rotation(local_angles.data(), rO);
+        Mat3<adouble> R_JO = Euler2Rotation(local_joint_orientation_angles.data(), rO);
+        Mat3<adouble> R_final = R_JO * R_local;
+        //multiplyAffineTransform4ds;
+        Mat3<adouble> R_global = R_final;
+        Vec3<adouble> T_global = T_local;
+        int tmp = fk.getJointParent(index);
+        if(tmp!=-1)
+            multiplyAffineTransform4ds(R_global_list[tmp], T_global_list[tmp], R_final, T_local, R_global, T_global);
+
+        //tmp = fk.getJointParent(tmp);;
+        R_global_list[index]=R_global;
+        T_global_list[index]=T_global;
+    }
     for (int i = 0; i < numIKJoints; i++)
     {
         int index = IKJointIDs[i];
-        int updateOrder = fk.getJointUpdateOrder(index);
-        Vec3<double> translation = Vec3<double>(fk.getJointRestTranslation(index).data());
-        RotateOrder rO = fk.getJointRotateOrder(index);
-        Vec3<double> local_angles = Vec3<double>(eulerAngles[index]);
-        Vec3<double> local_joint_orientation_angles = Vec3<double>(fk.getJointOrient(index).data());
-        Mat3<double> R = Euler2Rotation(local_angles.data(), rO);
-        Mat3<double> R_JO = Euler2Rotation(local_joint_orientation_angles.data(), rO);
+        Vec3<adouble> result = R_global_list[index] * Vec3<adouble>(0, 0, 0) + T_global_list[index];
 
-        //handlePositions[i] = 0.0;
+        handlePositions[3 * i + 0] = result.data()[0];
+        handlePositions[3 * i + 1] = result.data()[1];
+        handlePositions[3 * i + 2] = result.data()[2];
 
     }
-
-
 }
 
 } // end anonymous namespaces
@@ -109,13 +128,6 @@ void IK::train_adolc()
   //   (in other words, compute the "Jacobian matrix" J).
   // See ADOLCExample.cpp .
     int numJoints = fk->getNumJoints();
-    std::vector<double> eulerAngles;
-    for (int i = 0; i < numJoints; i++)
-    {
-        eulerAngles.push_back(fk->getJointEulerAngles()[i].data()[0]);
-        eulerAngles.push_back(fk->getJointEulerAngles()[i].data()[1]);
-        eulerAngles.push_back(fk->getJointEulerAngles()[i].data()[2]);
-    }
     trace_on(adolc_tagID);
     vector<adouble> x(FKInputDim);
     for (int i = 0; i < FKInputDim; i++)
@@ -125,19 +137,24 @@ void IK::train_adolc()
 
     forwardKinematicsFunction(numIKJoints, IKJointIDs,*fk, x, y);
 
-
     vector<double> output(FKOutputDim);
     for (int i = 0; i < FKOutputDim; i++)
         y[i] >>= output[i];
 
     trace_off();
+
 }
 
 void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles)
 {
-  // You may find the following helpful:
-  int numJoints = fk->getNumJoints(); // Note that is NOT the same as numIKJoints!
-
+  /*for (int i = 0; i < FKOutputDim; i++)
+  {
+      for (int j = 0; j < FKInputDim; j++)
+      {
+          printf("%.2f  ", jacobian_matrix[i][j]);
+      }
+      printf("\n");
+  }*/
   // Students should implement this.
   // Use adolc to evalute the forwardKinematicsFunction and its gradient (Jacobian). It was trained in train_adolc().
   // Specifically, use ::function, and ::jacobian .
@@ -146,6 +163,58 @@ void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles)
   // Use it implement the Tikhonov IK method (or the pseudoinverse method for extra credit).
   // Note that at entry, "jointEulerAngles" contains the input Euler angles. 
   // Upon exit, jointEulerAngles should contain the new Euler angles.
+    // You may find the following helpful:
+    int numJoints = fk->getNumJoints(); // Note that is NOT the same as numIKJoints!
+    double* input = new double[FKInputDim];
+    double* origin_pos = new double[FKOutputDim];
+    Eigen::MatrixXd J_T(FKInputDim, FKOutputDim);
+    Eigen::MatrixXd J(FKOutputDim, FKInputDim);
+    Eigen::MatrixXd I(FKOutputDim, FKOutputDim);
+    Eigen::VectorXd delta_b(FKOutputDim);
+
+    for (int i = 0; i < FKOutputDim; i++)
+        origin_pos[i] = 0;
+    for (int i = 0; i < numJoints; i++)
+    {
+        double* tmp = jointEulerAngles[i].data();
+        input[3 * i] = tmp[0];
+        input[3 * i + 1] = tmp[1];
+        input[3 * i + 2] = tmp[2];
+    }
+    double** jacobian_matrix = new double* [FKOutputDim];
+    for (int i = 0; i < FKOutputDim; i++)
+        jacobian_matrix[i] = new double[FKInputDim];
+    ::jacobian(adolc_tagID, FKOutputDim, FKInputDim, input, jacobian_matrix);
+  ::function(adolc_tagID, FKOutputDim, FKInputDim, input, origin_pos);
+  for (int i = 0; i < numIKJoints; i++)
+  {
+      const double* tmp = targetHandlePositions[i].data();
+      delta_b(3 * i) = tmp[0] - origin_pos[3 * i];
+      delta_b(3 * i + 1) = tmp[1] - origin_pos[3 * i + 1];
+      delta_b(3 * i + 2) = tmp[2] - origin_pos[3 * i + 2];
+  }
+  for (int i = 0; i < FKOutputDim; i++)
+  {
+      for (int j = 0; j < FKInputDim; j++)
+          J(i, j) = jacobian_matrix[i][j];
+      for (int j = 0; j < FKOutputDim; j++)
+      {
+          if (i == j)
+              I(i, j) = 1;
+          else
+              I(i, j) = 0;
+      }
+  }
+  J_T = J.transpose();
+
+  Eigen::MatrixXd a = J_T;
+
+  for (int i = 0; i < numJoints; i++)
+  {
+      jointEulerAngles[i] = fk->getJointEulerAngles()[i];
+
+  }
+
 
 }
 
