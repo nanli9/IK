@@ -97,8 +97,8 @@ void Skinning::applySkinning(const RigidTransform4d * jointSkinTransforms, doubl
       double x = restMeshVertexPositions[3 * i + 0];
       double y = restMeshVertexPositions[3 * i + 1];
       double z = restMeshVertexPositions[3 * i + 2];
-      Vec4d rest_vertex_pos = Vec4d(x, y, z, 0);
-      Vec4d result_pos = Vec4d(0, 0, 0, 0);
+      Vec4d rest_vertex_pos = Vec4d(x, y, z, 1);
+      Vec4d result_pos = Vec4d(0, 0, 0, 1);
       double sum = 0;
       for (int j = 0; j < numJointsInfluencingEachVertex; j++)
       {
