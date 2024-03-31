@@ -168,6 +168,7 @@ void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles)
     double* input_angle = new double[FKInputDim];
     double* origin_pos = new double[FKOutputDim];
     Eigen::MatrixXd J_T(FKInputDim, FKOutputDim);
+    Eigen::MatrixXd J_DAGGER(FKInputDim, FKOutputDim);
     Eigen::MatrixXd J(FKOutputDim, FKInputDim);
     Eigen::MatrixXd I(FKInputDim, FKInputDim);
     Eigen::VectorXd delta_b(FKOutputDim);
@@ -209,8 +210,14 @@ void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles)
   J_T = J.transpose();
   I.setIdentity();
   double alpha = 0.001;
-  Eigen::VectorXd delta_theta = (J_T * J + alpha * I).ldlt().solve(J_T * delta_b);
+  //Eigen::VectorXd delta_theta = (J_T * J + alpha * I).ldlt().solve(J_T * delta_b);
   
+  J_DAGGER = J_T * (J*J_T).inverse();
+  Eigen::VectorXd delta_theta = J_DAGGER * delta_b;
+
+
+
+
   for (int i = 0; i < numJoints; i++)
   {
     jointEulerAngles[i].data()[0] = fk->getJointEulerAngles()[i].data()[0] + delta_theta(3*i);
