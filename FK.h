@@ -58,7 +58,7 @@ public:
   // skeletonConfigFilename: ASCII file storing the rest configuration of each joint (translate, rotate, jointOrient and rotateOrder attributes)
   //                         Each line in the file gives the values for a single attribute for all the joints.
   // This constructor sets jointRestTranslations, jointRestEulerAngles, jointOrientations, jointRotateOrders.
-  FK(const std::string & jointHierarchyFilename, const std::string & skeletonConfigFilename);
+  FK(const std::string & jointHierarchyFilename, const std::string & skeletonConfigFilename, int numIKJoints, const int* IKJointIDs);
 
   // Based on the current euler angles (jointEulerAngles) of all joints, compute current 
   // values (jointLocalTransforms, jointGlobalTransforms, jointSkinTransforms) of all the joints.
@@ -96,12 +96,13 @@ public:
   Vec3d getJointGlobalPosition(int jointID) const { return jointGlobalTransforms[jointID].getTranslation(); }
   const RigidTransform4d & getJointGlobalTransform(int jointID) const { return jointGlobalTransforms[jointID]; }
   const RigidTransform4d * getJointSkinTransforms() const { return jointSkinTransforms.data(); } // the transforms are used for skinning
+  int adolc_tagID = 1; // tagID
 
 protected:
   void buildJointChildren();
 
   // See comment in the implementation file.
-  static void computeLocalAndGlobalTransforms(
+   void computeLocalAndGlobalTransforms(
     const std::vector<Vec3d> & translations, const std::vector<Vec3d> & eulerAngles,
     const std::vector<Vec3d> & jointOrientationEulerAngles, const std::vector<RotateOrder> & rotateOrders,
     const std::vector<int> jointParents, const std::vector<int> & jointUpdateOrder,
@@ -134,6 +135,14 @@ protected:
   // JointInvRestGlobalTransform is the global matrix that transfers the coordinate of a point expressed in 
   // a local joint coordinate frame, to the world coordinate frame; when the joint hierarchy is in the rest pose.
   std::vector<RigidTransform4d> jointInvRestGlobalTransforms;
+
+  int numIKJoints = 0;
+  const int* IKJointIDs = nullptr;
+  int FKInputDim = 0; // forward dynamics input dimension 
+  int FKOutputDim = 0; // forward dynamics output dimension
+
+  void train_adolc();
+
 };
 
 #endif

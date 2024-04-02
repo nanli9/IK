@@ -40,7 +40,7 @@ protected:
   int FKInputDim = 0; // forward dynamics input dimension 
   int FKOutputDim = 0; // forward dynamics output dimension
 
-  void train_adolc();
+  //void train_adolc();
 };
 
 #endif

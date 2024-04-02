@@ -498,7 +498,7 @@ static void initialize()
 
   assert(jointRestTransformsFilename.size() > 0 && jointWeightsFilename.size() > 0);
   skinning = new Skinning(meshDeformable->Getn(), meshDeformable->GetVertexRestPositions(), jointWeightsFilename);
-  fk = new FK(jointHierarchyFilename, jointRestTransformsFilename);
+  fk = new FK(jointHierarchyFilename, jointRestTransformsFilename, IKJointIDs.size(), IKJointIDs.data());
 
   // ---------------------------------------------------
   // Setting up Adol-c
