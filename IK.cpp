@@ -56,7 +56,7 @@ Mat3<real> Euler2Rotation(const real angle[3], RotateOrder order)
 template<typename real>
 void forwardKinematicsFunction(
     int numIKJoints, const int * IKJointIDs, const FK & fk,
-    const std::vector<real> & eulerAngles, std::vector<real> & handlePositions)
+    const std::vector<real> & eulerAngles, std::vector<real> & globalPositions)
 {
   // Students should implement this.
   // The implementation of this function is very similar to function computeLocalAndGlobalTransforms in the FK class.
@@ -92,15 +92,33 @@ void forwardKinematicsFunction(
         R_global_list[index]=R_global;
         T_global_list[index]=T_global;
     }
-    for (int i = 0; i < numIKJoints; i++)
+   /* for (int i = 0; i < numIKJoints; i++)
     {
         int index = IKJointIDs[i];
         Vec3<adouble> result = R_global_list[index] * Vec3<adouble>(0, 0, 0) + T_global_list[index];
 
-        handlePositions[3 * i + 0] = result.data()[0];
-        handlePositions[3 * i + 1] = result.data()[1];
-        handlePositions[3 * i + 2] = result.data()[2];
+        globalPositions[3 * i + 0] = result.data()[0];
+        globalPositions[3 * i + 1] = result.data()[1];
+        globalPositions[3 * i + 2] = result.data()[2];
 
+    }*/
+    for (int i = 0; i < fk.getNumJoints(); i++)
+    {
+        globalPositions[12 * i + 0] = R_global_list[i].data()[0];
+        globalPositions[12 * i + 1] = R_global_list[i].data()[1];
+        globalPositions[12 * i + 2] = R_global_list[i].data()[2];
+
+        globalPositions[12 * i + 3] = R_global_list[i].data()[3];
+        globalPositions[12 * i + 4] = R_global_list[i].data()[4];
+        globalPositions[12 * i + 5] = R_global_list[i].data()[5];
+
+        globalPositions[12 * i + 6] = R_global_list[i].data()[6];
+        globalPositions[12 * i + 7] = R_global_list[i].data()[7];
+        globalPositions[12 * i + 8] = R_global_list[i].data()[8];
+
+        globalPositions[12 * i + 9] = T_global_list[i].data()[0];
+        globalPositions[12 * i + 10] = T_global_list[i].data()[1];
+        globalPositions[12 * i + 11] = T_global_list[i].data()[2];
     }
 }
 
@@ -134,12 +152,12 @@ void IK::train_adolc()
     for (int i = 0; i < FKInputDim; i++)
         x[i] <<= 0;
 
-    std::vector<adouble> y(FKOutputDim);
+    std::vector<adouble> y(12 * numJoints);
 
     forwardKinematicsFunction(numIKJoints, IKJointIDs,*fk, x, y);
 
-    vector<double> output(FKOutputDim);
-    for (int i = 0; i < FKOutputDim; i++)
+    vector<double> output(12 * numJoints);
+    for (int i = 0; i < 12 * numJoints; i++)
         y[i] >>= output[i];
 
     trace_off();
@@ -167,6 +185,7 @@ void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles)
     // You may find the following helpful:
     int numJoints = fk->getNumJoints(); // Note that is NOT the same as numIKJoints!
     double* input_angle = new double[FKInputDim];
+    double* output_global = new double[12 * numJoints];
     double* origin_pos = new double[FKOutputDim];
     Eigen::MatrixXd J_T(FKInputDim, FKOutputDim);
     Eigen::MatrixXd J_DAGGER(FKInputDim, FKOutputDim);
@@ -183,11 +202,36 @@ void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles)
         input_angle[3 * i + 1] = tmp[1];
         input_angle[3 * i + 2] = tmp[2];
     }
-    double** jacobian_matrix = new double* [FKOutputDim];
-    for (int i = 0; i < FKOutputDim; i++)
+    double** jacobian_matrix = new double* [12 * numJoints];
+    for (int i = 0; i < 12 * numJoints; i++)
         jacobian_matrix[i] = new double[FKInputDim];
-    ::jacobian(adolc_tagID, FKOutputDim, FKInputDim, input_angle, jacobian_matrix);
-  ::function(adolc_tagID, FKOutputDim, FKInputDim, input_angle, origin_pos);
+    ::jacobian(adolc_tagID, 12 * numJoints, FKInputDim, input_angle, jacobian_matrix);
+  ::function(adolc_tagID, 12 * numJoints, FKInputDim, input_angle, output_global);
+
+  double** jacobian = new double* [FKOutputDim];
+  for (int i = 0; i < FKOutputDim; i++)
+      jacobian[i] = new double[FKInputDim];
+
+  for (int k = 0; k < numIKJoints; k++)
+  {
+    int index = IKJointIDs[k];
+    for (int j = 0; j < FKInputDim; j++)
+    {
+        jacobian[3*k + 0][j] = jacobian_matrix[12 * index + 9][j];
+        jacobian[3*k + 1][j] = jacobian_matrix[12 * index + 10][j];
+        jacobian[3*k + 2][j] = jacobian_matrix[12 * index + 11][j];
+    }
+    
+    origin_pos[3 * k + 0] = output_global[12 * index + 9];
+    origin_pos[3 * k + 1] = output_global[12 * index + 10];
+    origin_pos[3 * k + 2] = output_global[12 * index + 11];
+
+  }
+
+ /* Eigen::Matrix3d R();
+  Eigen::Vector3d T(origin_pos[9], origin_pos[10], origin_pos[11]);
+  Eigen::Vector3d Result = Eigen::Vector3d(0, 0, 0) + T;*/
+
   for (int i = 0; i < numIKJoints; i++)
   {
       const double* tmp = targetHandlePositions[i].data();
@@ -199,7 +243,7 @@ void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles)
   for (int i = 0; i < FKOutputDim; i++)
   {
       for (int j = 0; j < FKInputDim; j++)
-          J(i, j) = jacobian_matrix[i][j];
+          J(i, j) = jacobian[i][j];
       /*for (int j = 0; j < FKOutputDim; j++)
       {
           if (i == j)
