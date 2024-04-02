@@ -116,6 +116,7 @@ IK::IK(int numIKJoints, const int * IKJointIDs, FK * inputFK, int adolc_tagID)
   FKInputDim = fk->getNumJoints() * 3;
   FKOutputDim = numIKJoints * 3;
   train_adolc();
+
 }
 
 void IK::train_adolc()
@@ -214,7 +215,6 @@ void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles)
   
   J_DAGGER = J_T * (J*J_T).inverse();
   Eigen::VectorXd delta_theta = J_DAGGER * delta_b;
-
 
 
 

@@ -4,10 +4,17 @@
 #include <cassert>
 #include <iostream>
 #include <fstream>
+#include <Eigen/Dense>
 using namespace std;
 
 // CSCI 520 Computer Animation and Simulation
 // Jernej Barbic and Yijing Li
+
+struct DualQuaternion {
+    Eigen::Quaterniond  q1;
+    Eigen::Quaterniond  q2;
+};
+
 
 Skinning::Skinning(int numMeshVertices, const double * restMeshVertexPositions,
     const std::string & meshSkinningWeightsFilename)
