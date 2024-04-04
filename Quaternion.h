@@ -6,29 +6,29 @@
 #include "transform4d.h"
 
 
-class Quatrernion
+class Quaternion
 {
 public:
-	Quatrernion();
-	Quatrernion(double w, double x, double y, double z);
-	Quatrernion(RigidTransform4d M);
+	Quaternion();
+	Quaternion(double w, double x, double y, double z);
+	Quaternion(RigidTransform4d M);
 	void normalize();
-	Quatrernion QuatrernionConjugate(Quatrernion q);
+	Quaternion QuaternionConjugate();
 	double norm();
 	double norm2();
-	double innerProduct(Quatrernion q);
+	double innerProduct(Quaternion q);
 	Mat3d getRoatation();
 
-	friend inline Quatrernion operator* (double scalar, const Quatrernion& q1)
+	friend inline Quaternion operator* (double scalar, const Quaternion& q1)
 	{
-		Quatrernion result;
+		Quaternion result;
 		for (int i = 0; i < 4; i++)
 			result.value[i] = scalar * q1.value[i];
 		return result;
 	}
-	friend inline Quatrernion operator* (const Quatrernion& a, const Quatrernion& b)
+	friend inline Quaternion operator* (const Quaternion& a, const Quaternion& b)
 	{
-		Quatrernion result;
+		Quaternion result;
 
 		result.value[0] = a.value[0] * b.value[0] - a.value[1] * b.value[1] - a.value[2] * b.value[2] - a.value[3] * b.value[3];
 		result.value[1] = a.value[0] * b.value[1] + a.value[1] * b.value[0] + a.value[2] * b.value[3] - a.value[3] * b.value[2];
@@ -37,11 +37,18 @@ public:
 
 		return result;
 	}
-	friend inline Quatrernion operator+ (const Quatrernion& q1, const Quatrernion& q2)
+	friend inline Quaternion operator+ (const Quaternion& q1, const Quaternion& q2)
 	{
-		Quatrernion result;
+		Quaternion result;
 		for (int i = 0; i < 4; i++)
 			result.value[i] = q1.value[i] + q1.value[i];
+		return result;
+	}
+	friend inline Quaternion operator- (const Quaternion& q1, const Quaternion& q2)
+	{
+		Quaternion result;
+		for (int i = 0; i < 4; i++)
+			result.value[i] = q1.value[i] - q1.value[i];
 		return result;
 	}
 	double value[4];

@@ -4,40 +4,42 @@
 
 #include "vec3d.h"
 #include "transform4d.h"
+#include "Quaternion.h"
 
-
-class dualQuatrernion
+class dualQuaternion
 {
 public:
-	dualQuatrernion();
-	dualQuatrernion(RigidTransform4d M);
+	dualQuaternion();
+	dualQuaternion(RigidTransform4d M);
 	void normalize();
-	dualQuatrernion DualConjugate(dualQuatrernion q);
-	dualQuatrernion QuatrernionConjugate(dualQuatrernion q);
-	double norm();
-	double innerProduct();
+	dualQuaternion DualConjugate();
+	dualQuaternion QuaternionConjugate();
 	Vec3d getTranslation();
 	Mat3d getRoatation();
 
-	friend inline dualQuatrernion operator* (double scalar, const dualQuatrernion& q1)
+	friend inline dualQuaternion operator* (double scalar, const dualQuaternion& q1)
 	{
-		dualQuatrernion result;
-		for (int i = 0; i < 8; i++)
-			result.value[i] = scalar * q1.value[i];
+		dualQuaternion result;
+		result.q0 = scalar * q1.q0;
+		result.q_epsilon = scalar * q1.q_epsilon;
 		return result;
 	}
-	friend inline dualQuatrernion operator* (const dualQuatrernion& q1, const dualQuatrernion& q2)
+	friend inline dualQuaternion operator* (const dualQuaternion& q1, const dualQuaternion& q2)
 	{
+		dualQuaternion result;
+		result.q0 = q1.q0 * q2.q0;
+		result.q_epsilon = q1.q0 * q2.q_epsilon + q1.q_epsilon * q2.q0;
 
 	}
-	friend inline dualQuatrernion operator+ (const dualQuatrernion& q1, const dualQuatrernion& q2)
+	friend inline dualQuaternion operator+ (const dualQuaternion& q1, const dualQuaternion& q2)
 	{
-		dualQuatrernion result;
-		for (int i = 0; i < 8; i++)
-			result.value[i] = q1.value[i] + q1.value[i];
+		dualQuaternion result;
+		result.q0 = q1.q0 + q2.q0;
+		result.q_epsilon = q1.q_epsilon + q2.q_epsilon;
 		return result;
 	}
-	double value[8];
+
+	Quaternion q0, q_epsilon;
 };
 
 

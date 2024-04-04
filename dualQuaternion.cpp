@@ -1,83 +1,55 @@
 #include "dualQuaternion.h"
 
 
-dualQuatrernion::dualQuatrernion()
+dualQuaternion::dualQuaternion()
 {
-	for (int i = 0; i < 8; i++)
-		value[i] = 0;
+	q0 = Quaternion();
+	q_epsilon = Quaternion();
 }
 
-dualQuatrernion::dualQuatrernion(RigidTransform4d M)
+dualQuaternion::dualQuaternion(RigidTransform4d m)
 {
-
-
+	q0 = Quaternion(m);
+	Vec3d t = m.getTranslation();
+	q_epsilon = 0.5 * (Quaternion(0,t[0], t[1], t[2])) * q0;
 }
 
-void dualQuatrernion::normalize()
+void dualQuaternion::normalize()
 {
+	double norm_q0_inverse = 1.0/q0.norm();
+	q0 = norm_q0_inverse * q0;
+	q_epsilon = norm_q0_inverse * q_epsilon - norm_q0_inverse * norm_q0_inverse * norm_q0_inverse * (q0.innerProduct(q_epsilon) * q0);
+
 }
-dualQuatrernion dualQuatrernion::QuatrernionConjugate(dualQuatrernion q)
+dualQuaternion dualQuaternion::QuaternionConjugate()
 {
-	dualQuatrernion result;
-	result.value[0] = q.value[0];
-	result.value[1] = -q.value[1];
-	result.value[2] = -q.value[2];
-	result.value[3] = -q.value[3];
-
-	result.value[4] = q.value[4];
-	result.value[5] = -q.value[5];
-	result.value[6] = -q.value[6];
-	result.value[7] = -q.value[7];
-
+	dualQuaternion result;
+	result.q0 = q0.QuaternionConjugate();
+	result.q_epsilon = q_epsilon.QuaternionConjugate();
 	return result;
 }
 
-dualQuatrernion dualQuatrernion::DualConjugate(dualQuatrernion q)
+dualQuaternion dualQuaternion::DualConjugate()
 {
-	dualQuatrernion result;
-
-	result.value[0] = q.value[0];
-	result.value[1] = q.value[1];
-	result.value[2] = q.value[2];
-	result.value[3] = q.value[3];
-
-	result.value[4] = -q.value[4];
-	result.value[5] = -q.value[5];
-	result.value[6] = -q.value[6];
-	result.value[7] = -q.value[7];
-
+	dualQuaternion result;
+	result.q0 = q0;
+	result.q_epsilon = -1 * q_epsilon;
 	return result;
 }
 
-double dualQuatrernion::norm()
+Vec3d dualQuaternion::getTranslation()
 {
-	double result = 0;
-
-
-	return result;
-}
-
-double dualQuatrernion::innerProduct()
-{
-	double result;
-	result = value[0] * value[4] + value[1] * value[5] + value[2] * value[6] + value[3] * value[7];
-
-
-	return result;
-}
-
-Vec3d dualQuatrernion::getTranslation()
-{
-
 	Vec3d result;
-
+	double norm_q0_inverse = 1.0 / q0.norm();
+	Quaternion q = 2 * (norm_q0_inverse * norm_q0_inverse * q_epsilon * q0.QuaternionConjugate());
+	result = Vec3d(q.value[1], q.value[2], q.value[3]);
 	return result;
 }
 
 
-Mat3d dualQuatrernion::getRoatation()
+Mat3d dualQuaternion::getRoatation()
 {
 	Mat3d result;
-
+	result = q0.getRoatation();
 	return result;
 }
