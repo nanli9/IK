@@ -126,6 +126,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\driver.cpp" />
+    <ClCompile Include="..\dualQuaternion.cpp" />
     <ClCompile Include="..\FK.cpp" />
     <ClCompile Include="..\IK.cpp" />
     <ClCompile Include="..\skeletonRenderer.cpp" />
@@ -151,6 +152,7 @@
     <ClCompile Include="..\vega\vec3d.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\dualQuaternion.h" />
     <ClInclude Include="..\FK.h" />
     <ClInclude Include="..\IK.h" />
     <ClInclude Include="..\minivectorTemplate.h" />
