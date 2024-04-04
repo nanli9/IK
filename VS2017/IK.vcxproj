@@ -129,6 +129,7 @@
     <ClCompile Include="..\dualQuaternion.cpp" />
     <ClCompile Include="..\FK.cpp" />
     <ClCompile Include="..\IK.cpp" />
+    <ClCompile Include="..\Quaternion.cpp" />
     <ClCompile Include="..\skeletonRenderer.cpp" />
     <ClCompile Include="..\skinning.cpp" />
     <ClCompile Include="..\vega\averagingBuffer.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="..\FK.h" />
     <ClInclude Include="..\IK.h" />
     <ClInclude Include="..\minivectorTemplate.h" />
+    <ClInclude Include="..\Quaternion.h" />
     <ClInclude Include="..\skeletonRenderer.h" />
     <ClInclude Include="..\skinning.h" />
     <ClInclude Include="..\vega\averagingBuffer.h" />
