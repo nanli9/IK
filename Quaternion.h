@@ -41,14 +41,14 @@ public:
 	{
 		Quaternion result;
 		for (int i = 0; i < 4; i++)
-			result.value[i] = q1.value[i] + q1.value[i];
+			result.value[i] = q1.value[i] + q2.value[i];
 		return result;
 	}
 	friend inline Quaternion operator- (const Quaternion& q1, const Quaternion& q2)
 	{
 		Quaternion result;
 		for (int i = 0; i < 4; i++)
-			result.value[i] = q1.value[i] - q1.value[i];
+			result.value[i] = q1.value[i] - q2.value[i];
 		return result;
 	}
 	double value[4];

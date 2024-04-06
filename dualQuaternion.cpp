@@ -12,6 +12,7 @@ dualQuaternion::dualQuaternion(RigidTransform4d m)
 	q0 = Quaternion(m);
 	Vec3d t = m.getTranslation();
 	q_epsilon = 0.5 * (Quaternion(0,t[0], t[1], t[2])) * q0;
+
 }
 
 void dualQuaternion::normalize()

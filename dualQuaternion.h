@@ -29,7 +29,7 @@ public:
 		dualQuaternion result;
 		result.q0 = q1.q0 * q2.q0;
 		result.q_epsilon = q1.q0 * q2.q_epsilon + q1.q_epsilon * q2.q0;
-
+		return result;
 	}
 	friend inline dualQuaternion operator+ (const dualQuaternion& q1, const dualQuaternion& q2)
 	{

@@ -255,10 +255,10 @@ void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles)
   J_T = J.transpose();
   I.setIdentity();
   double alpha = 0.01;
-  //Eigen::VectorXd delta_theta = (J_T * J + alpha * I).ldlt().solve(J_T * delta_b);
+  Eigen::VectorXd delta_theta = (J_T * J + alpha * I).ldlt().solve(J_T * delta_b);
   
   J_DAGGER = J_T * (J*J_T).inverse();
-  Eigen::VectorXd delta_theta = J_DAGGER * delta_b;
+  //Eigen::VectorXd delta_theta = J_DAGGER * delta_b;
 
 
 

@@ -1,5 +1,6 @@
 #include "skinning.h"
 #include "vec3d.h"
+#include "dualQuaternion.h"
 #include <algorithm>
 #include <cassert>
 #include <iostream>
@@ -9,12 +10,6 @@ using namespace std;
 
 // CSCI 520 Computer Animation and Simulation
 // Jernej Barbic and Yijing Li
-
-struct DualQuaternion {
-    Eigen::Quaterniond  q1;
-    Eigen::Quaterniond  q2;
-};
-
 
 Skinning::Skinning(int numMeshVertices, const double * restMeshVertexPositions,
     const std::string & meshSkinningWeightsFilename)
@@ -99,6 +94,13 @@ void Skinning::applySkinning(const RigidTransform4d * jointSkinTransforms, doubl
 
     //    }
     //}
+
+    /*dualQuaternion q1 = dualQuaternion();
+    q1.q0 = Quaternion(2, 3, 4, 5);
+    dualQuaternion q2 = dualQuaternion();
+    q2.q_epsilon = Quaternion(2, 3, 4, 5);
+    dualQuaternion q3 = q2 + q1;*/
+
   for(int i=0; i<numMeshVertices; i++)
   {
       double x = restMeshVertexPositions[3 * i + 0];
@@ -106,21 +108,35 @@ void Skinning::applySkinning(const RigidTransform4d * jointSkinTransforms, doubl
       double z = restMeshVertexPositions[3 * i + 2];
       Vec4d rest_vertex_pos = Vec4d(x, y, z, 1);
       Vec4d result_pos = Vec4d(0, 0, 0, 1);
+      dualQuaternion result_dQ = dualQuaternion();
       double sum = 0;
       for (int j = 0; j < numJointsInfluencingEachVertex; j++)
       {
+
           double weight = meshSkinningWeights[numJointsInfluencingEachVertex * i+j];
           sum += weight;
           RigidTransform4d skin_matrix = jointSkinTransforms[meshSkinningJoints[numJointsInfluencingEachVertex * i+j]];
+          
+          dualQuaternion dQ = dualQuaternion(skin_matrix);
+          result_dQ = result_dQ + weight * dQ;
           result_pos += weight * skin_matrix * rest_vertex_pos;
       }
       if (fabs(sum - 1) > 0.001)
           printf("error\n");
       /*if (fabs(result_pos[0] - x) > 0.001)
           printf("error\n");*/
+      result_dQ.normalize();
+      Vec3d translation = result_dQ.getTranslation();
+      Mat3d Rotation = result_dQ.getRoatation();
+      RigidTransform4d m = RigidTransform4d(Rotation, translation);
+      Vec4d result_pos_dQ = m * rest_vertex_pos;
       newMeshVertexPositions[3 * i + 0] = result_pos[0];
       newMeshVertexPositions[3 * i + 1] = result_pos[1];
       newMeshVertexPositions[3 * i + 2] = result_pos[2];
+
+      /*newMeshVertexPositions[3 * i + 0] = result_pos_dQ[0];
+      newMeshVertexPositions[3 * i + 1] = result_pos_dQ[1];
+      newMeshVertexPositions[3 * i + 2] = result_pos_dQ[2];*/
   }
 
 
