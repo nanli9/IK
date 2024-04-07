@@ -116,7 +116,6 @@ static void resetSkinningToRest()
 
   cout << "reset mesh to rest" << endl;
 }
-Vec3d diff = Vec3d(0, 0, 0);
 static void idleFunction()
 {
   glutSetWindow(windowID);
@@ -129,7 +128,6 @@ static void idleFunction()
     if (len2(posDiff) > 0 && handleControl.isHandleSelected())
     {
       IKJointPos[handleControl.getSelectedHandle()] += posDiff;
-      diff = posDiff;
     }
 
   };
@@ -141,7 +139,7 @@ static void idleFunction()
   {
       Vec3d difference = IKJointPos[handleControl.getSelectedHandle()] - IKJointPos_ghost[handleControl.getSelectedHandle()];
       if (len2(difference) > 1)
-          IKJointPos_ghost[handleControl.getSelectedHandle()] += diff / 4;
+          IKJointPos_ghost[handleControl.getSelectedHandle()] += difference / 8;
       else if(len2(difference) > 0.01)
           IKJointPos_ghost[handleControl.getSelectedHandle()] += difference;
   }
