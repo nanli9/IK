@@ -84,7 +84,8 @@ static AveragingBuffer fpsBuffer(5);
 
 static vector<int> IKJointIDs;
 static vector<Vec3d> IKJointPos;
-
+static vector<Vec3d> IKJointPos_ghost;
+const double stepSize = 0.5;
 //======================= Functions =============================
 
 static void updateSkinnedMesh()
@@ -108,34 +109,44 @@ static void resetSkinningToRest()
   for(size_t i = 0; i < IKJointIDs.size(); i++)
   {
     IKJointPos[i] = fk->getJointGlobalPosition(IKJointIDs[i]);
+    IKJointPos_ghost[i] = fk->getJointGlobalPosition(IKJointIDs[i]);
   }
   handleControl.clearHandleSelection();
   curJointID = -1;
 
   cout << "reset mesh to rest" << endl;
 }
-
+Vec3d diff = Vec3d(0, 0, 0);
 static void idleFunction()
 {
   glutSetWindow(windowID);
   counter.StopCounter();
   // double dt = counter.GetElapsedTime();
   counter.StartCounter();
-
   // Take appropriate action in case the user is dragging a vertex.
   auto processDrag = [&](int vertex, Vec3d posDiff)
   {
     if (len2(posDiff) > 0 && handleControl.isHandleSelected())
     {
       IKJointPos[handleControl.getSelectedHandle()] += posDiff;
+      diff = posDiff;
     }
+
   };
   handleControl.processHandleMovement(id.getMousePosX(), id.getMousePosY(), id.shiftPressed(), processDrag);
 
   const int maxIKIters = 10;
   const double maxOneStepDistance = modelRadius / 1000;
+  if (handleControl.isHandleSelected())
+  {
+      Vec3d difference = IKJointPos[handleControl.getSelectedHandle()] - IKJointPos_ghost[handleControl.getSelectedHandle()];
+      if (len2(difference) > 1)
+          IKJointPos_ghost[handleControl.getSelectedHandle()] += diff / 4;
+      else if(len2(difference) > 0.01)
+          IKJointPos_ghost[handleControl.getSelectedHandle()] += difference;
+  }
 
-  ik->doIK(IKJointPos.data(), fk->getJointEulerAngles());
+  ik->doIK(IKJointPos_ghost.data(), fk->getJointEulerAngles());
 
   updateSkinnedMesh();
 
@@ -505,9 +516,11 @@ static void initialize()
   // ---------------------------------------------------
   ik = new IK(IKJointIDs.size(), IKJointIDs.data(), fk);
   IKJointPos.resize(IKJointIDs.size());
+  IKJointPos_ghost.resize(IKJointIDs.size());
   for(size_t i = 0; i < IKJointIDs.size(); i++)
   {
     IKJointPos[i] = fk->getJointGlobalPosition(IKJointIDs[i]);
+    IKJointPos_ghost[i] = IKJointPos[i];
   }
 
   // ---------------------------------------------------
