@@ -85,9 +85,10 @@ static AveragingBuffer fpsBuffer(5);
 static vector<int> IKJointIDs;
 static vector<Vec3d> IKJointPos;
 static vector<Vec3d> IKJointPos_ghost;
-const double stepSize = 0.5;
-//======================= Functions =============================
 
+IKAlgorithm ikAlgorithm = TIKHONOV;
+SkinningAlgorithm skinningAlgorithm = LINEAR;
+//======================= Functions =============================
 static void updateSkinnedMesh()
 {
   vector<Vec3d> newPos(meshDeformable->GetNumVertices());
@@ -95,7 +96,7 @@ static void updateSkinnedMesh()
 
   fk->computeJointTransforms();
 
-  skinning->applySkinning(fk->getJointSkinTransforms(), newPosv);
+  skinning->applySkinning(fk->getJointSkinTransforms(), newPosv,skinningAlgorithm);
   for(size_t i = 0; i < mesh->getNumVertices(); i++)
     mesh->setPosition(i, newPos[i]);
 
@@ -330,6 +331,18 @@ static void keyboardFunc(unsigned char key, int x, int y)
     case 's':
       renderSkeleton = !renderSkeleton;
       break;
+    case 'd':
+        skinningAlgorithm = DUALQUATERNION;
+        break;
+    case 'l':
+        skinningAlgorithm = LINEAR;
+        break;
+    case 'p':
+        ikAlgorithm = PSEUDOINVERSE;
+        break;
+    case 't':
+        ikAlgorithm = TIKHONOV;
+        break;
 
     default:
       break;

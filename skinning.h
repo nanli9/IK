@@ -9,7 +9,11 @@
 
 // CSCI 520 Computer Animation and Simulation
 // Jernej Barbic and Yijing Li
-
+enum SkinningAlgorithm
+{
+    LINEAR = 1,
+    DUALQUATERNION = 2
+};
 class Skinning
 {
 public:
@@ -24,7 +28,7 @@ public:
   // jointSkinTransform = globalTransform * globalRestTransform^{-1}
   // input: jointSkinTransforms
   // output: newMeshVertexPositions (length is 3*numMeshVertices)
-  void applySkinning(const RigidTransform4d * jointSkinTransforms, double * newMeshVertexPositions) const;
+  void applySkinning(const RigidTransform4d * jointSkinTransforms, double * newMeshVertexPositions, SkinningAlgorithm skinningAlgorithm) const;
 
 protected:
   int numMeshVertices = 0;

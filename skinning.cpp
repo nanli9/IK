@@ -73,7 +73,7 @@ Skinning::Skinning(int numMeshVertices, const double * restMeshVertexPositions,
   }
 }
 
-void Skinning::applySkinning(const RigidTransform4d * jointSkinTransforms, double * newMeshVertexPositions) const
+void Skinning::applySkinning(const RigidTransform4d * jointSkinTransforms, double * newMeshVertexPositions,SkinningAlgorithm skinningAlgorithm) const
 {
   // Students should implement this
   // The following below is just a dummy implementation.
@@ -130,13 +130,19 @@ void Skinning::applySkinning(const RigidTransform4d * jointSkinTransforms, doubl
       Mat3d Rotation = result_dQ.getRoatation();
       RigidTransform4d m = RigidTransform4d(Rotation, translation);
       Vec4d result_pos_dQ = m * rest_vertex_pos;
-      newMeshVertexPositions[3 * i + 0] = result_pos[0];
-      newMeshVertexPositions[3 * i + 1] = result_pos[1];
-      newMeshVertexPositions[3 * i + 2] = result_pos[2];
-
-      newMeshVertexPositions[3 * i + 0] = result_pos_dQ[0];
-      newMeshVertexPositions[3 * i + 1] = result_pos_dQ[1];
-      newMeshVertexPositions[3 * i + 2] = result_pos_dQ[2];
+      if (skinningAlgorithm == LINEAR)
+      {
+          newMeshVertexPositions[3 * i + 0] = result_pos[0];
+          newMeshVertexPositions[3 * i + 1] = result_pos[1];
+          newMeshVertexPositions[3 * i + 2] = result_pos[2];
+      }
+      else if (skinningAlgorithm == DUALQUATERNION)
+      {
+          newMeshVertexPositions[3 * i + 0] = result_pos_dQ[0];
+          newMeshVertexPositions[3 * i + 1] = result_pos_dQ[1];
+          newMeshVertexPositions[3 * i + 2] = result_pos_dQ[2];
+      }
+      
   }
 
 

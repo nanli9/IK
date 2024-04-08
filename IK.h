@@ -8,6 +8,11 @@
 // Jernej Barbic and Yijing Li
 
 #include <cfloat>
+enum IKAlgorithm
+{
+    PSEUDOINVERSE = 1,
+    TIKHONOV = 2
+};
 
 class FK;
 class Vec3d;
