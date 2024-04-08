@@ -145,7 +145,7 @@ static void idleFunction()
           IKJointPos_ghost[handleControl.getSelectedHandle()] += difference;
   }
 
-  ik->doIK(IKJointPos_ghost.data(), fk->getJointEulerAngles());
+  ik->doIK(IKJointPos_ghost.data(), fk->getJointEulerAngles(),ikAlgorithm);
 
   updateSkinnedMesh();
 

@@ -29,7 +29,7 @@ public:
   // input: an array of numIKJoints Vec3d's giving the positions of the IK handles, current joint Euler angles
   // output: the computed joint Euler angles; same meaning as in the FK class
   // Note: eulerAngles is both input and output
-  void doIK(const Vec3d * targetHandlePositions, Vec3d * eulerAngles);
+  void doIK(const Vec3d * targetHandlePositions, Vec3d * eulerAngles, IKAlgorithm ikAlgorithm);
 
   // IK parameters
   int getFKInputDim() const { return FKInputDim; }

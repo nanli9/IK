@@ -164,7 +164,7 @@ IK::IK(int numIKJoints, const int * IKJointIDs, FK * inputFK, int adolc_tagID)
 //
 //}
 
-void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles)
+void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles, IKAlgorithm ikAlgorithm)
 {
   /*for (int i = 0; i < FKOutputDim; i++)
   {
@@ -255,12 +255,14 @@ void IK::doIK(const Vec3d * targetHandlePositions, Vec3d * jointEulerAngles)
   J_T = J.transpose();
   I.setIdentity();
   double alpha = 0.01;
-  Eigen::VectorXd delta_theta = (J_T * J + alpha * I).ldlt().solve(J_T * delta_b);
-  
-  J_DAGGER = J_T * (J*J_T).inverse();
-  //Eigen::VectorXd delta_theta = J_DAGGER * delta_b;
-
-
+  Eigen::VectorXd delta_theta;
+  if(ikAlgorithm==TIKHONOV)
+    delta_theta = (J_T * J + alpha * I).ldlt().solve(J_T * delta_b);
+  else if (ikAlgorithm==PSEUDOINVERSE)
+  {
+      J_DAGGER = J_T * (J * J_T).inverse();
+      delta_theta = J_DAGGER * delta_b;
+  }
 
   for (int i = 0; i < numJoints; i++)
   {
